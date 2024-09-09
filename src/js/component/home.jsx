@@ -5,7 +5,7 @@ const Home = () => {
 	const [task, setTask] = useState("");
 	const [tasks, setTasks] = useState([]);
 
-	const baseUrl = 'https://playground.4geeks.com/todo/user/alesanchezr'
+	const baseUrl = https://playground.4geeks.com/todo/users/EliannyBello
 
 	useEffect(() => {
 		fetch(baseUrl, {
