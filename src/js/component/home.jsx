@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
 
 const Home = () => {
-
 	const [task, setTask] = useState("");
 	const [tasks, setTasks] = useState([]);
 
-	const baseUrl = https://playground.4geeks.com/todo/users/EliannyBello
+	const baseUrl = "https://playground.4geeks.com";
 
 	useEffect(() => {
-		fetch(baseUrl, {
+		getTask();
+	}, []);
+
+	const getTask = () => {
+		fetch(baseUrl + "/todo/users/EliannyBello", {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json"
@@ -16,8 +19,8 @@ const Home = () => {
 		})
 			.then(resp => resp.json())
 			.then(data => {
-				if (Array.isArray(data)) {
-					setTasks(data);
+				if (Array.isArray(data.todos)) {
+					setTasks(data.todos);
 				} else {
 					setTasks([]);
 				}
@@ -25,50 +28,56 @@ const Home = () => {
 			.catch(error => {
 				console.log("Error cargando las tareas:", error);
 			});
-	}, []);
+	};
 
-	const putTask = (todo) => {
-		fetch(baseUrl, {
-			method: "PUT",
-			body: JSON.stringify(todo),
+
+
+	const deleteTask = (id) => {
+		fetch(baseUrl + "/todo/todos/" + id, {
+			method: "DELETE",
 			headers: {
 				"Content-Type": "application/json"
 			}
 		})
 			.then(resp => {
-				// console.log(resp.ok); // Será true si la respuesta es exitosa
-				// console.log(resp.status); // El código de estado 200, 300, 400, etc.
-				// console.log(resp.text()); // Intentará devolver el resultado exacto como string
-				return resp.json(); // Intentará parsear el resultado a JSON y retornará una promesa donde puedes usar .then para seguir con la lógica
-			})
-			.then(data => {
-				// Aquí es donde debe comenzar tu código después de que finalice la búsqueda
-				console.log(data); // Esto imprimirá en la consola el objeto exacto recibido del servidor
+				if (resp.ok) {
+					getTask();
+				}
 			})
 			.catch(error => {
-				// Manejo de errores
-				console.log(error);
+				console.log("Error al eliminar la tarea:", error);
 			});
-	}
+	};
+
 
 	const addTask = (e) => {
 		e.preventDefault();
 		if (task === "") return;
-		setTasks([...tasks, task]);
-		setTask("");
-		putTask(addTask)
+
+		const newTask = { label: task, done: false };
+
+		fetch(baseUrl + "/todo/todos/EliannyBello", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(newTask)
+		})
+			.then(resp => {
+				if (resp.ok) {
+					getTask();
+					setTask("");
+				}
+			})
+			.catch(error => {
+				console.log("Error al añadir la tarea:", error);
+			});
 	};
 
-	const deleteTask = (i) => {
-		const updatedTasks = tasks.filter(task => task !== i);
-		setTasks(updatedTasks);
-		putTask(updatedTasks)
-	};
+
 	const clearAllTasks = () => {
-		setTasks([]); 
-		putTask([]); 
+		setTasks([]);
 	};
-
 
 	return (
 		<div className="container">
@@ -78,7 +87,6 @@ const Home = () => {
 					type="text"
 					value={task}
 					onChange={(e) => setTask(e.target.value)}
-					onKeyUp={(e) => setTask(e.target.value)}
 					placeholder="Escribe una tarea..."
 				/>
 			</form>
@@ -86,8 +94,8 @@ const Home = () => {
 				{tasks.length === 0 ? (
 					<li>No hay tareas pendientes</li>) : (tasks.map((task, index) => (
 						<li key={index}>
-							{task}{" "}
-							<button onClick={() => deleteTask(task)}>X</button>
+							{task.label}{" "}
+							<button onClick={() => deleteTask(task.id)}>X</button>
 						</li>
 					))
 				)}
